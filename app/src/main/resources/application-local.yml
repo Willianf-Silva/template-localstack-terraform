@@ -1,0 +1,17 @@
+spring:
+  cloud:
+    aws:
+      credentials:
+        access-key: test
+        secret-key: test
+      region:
+        static: us-east-1
+      # Aponta para o Docker
+      endpoint: http://localhost:4566
+      s3:
+        endpoint: http://localhost:4566
+        path-style-access-enabled: true  # Obrigatório apenas no LocalStack
+      sqs:
+        endpoint: http://localhost:4566
+      dynamodb:
+        endpoint: http://localhost:4566

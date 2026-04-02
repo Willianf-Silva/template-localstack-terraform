@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: saas-core
+  profiles:
+    active: local # Por padrão, ele roda na sua máquina
+
+# Variáveis do seu negócio (nomes dos recursos não mudam)
+app:
+  aws:
+    s3:
+      bucket-name: local-app-storage
+    sqs:
+      queue-name: app-sqs-queue
+    dynamodb:
+      table-name: AppConfigTable

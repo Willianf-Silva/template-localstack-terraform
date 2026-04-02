@@ -1,0 +1,10 @@
+spring:
+  cloud:
+    aws:
+      # Não precisamos passar credentials! O Spring vai pegar automaticamente
+      # da IAM Role da máquina EC2 ou do ECS/EKS onde ele estiver rodando.
+      region:
+        static: us-east-1
+
+      # NÃO passamos 'endpoint', para ele usar a URL real da Amazon
+      # NÃO passamos 'path-style-access-enabled', para ele usar o Virtual Hosted padrão
