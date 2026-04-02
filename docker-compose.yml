@@ -1,0 +1,26 @@
+services:
+  # 1. Nossa "AWS Local"
+  localstack:
+    container_name: dev_localstack
+    image: localstack/localstack:latest
+    ports:
+      - "127.0.0.1:4566:4566"            # Edge Router principal
+      - "127.0.0.1:4510-4559:4510-4559"  # Portas de serviços auxiliares
+    environment:
+      # LocalStack configuration: https://docs.localstack.cloud/references/configuration/
+      - LOCALSTACK_AUTH_TOKEN=${LOCALSTACK_AUTH_TOKEN}
+      - DEBUG=1
+      # Define os serviços essenciais que o LocalStack deve preparar
+      - SERVICES=s3,sqs,sns,dynamodb,lambda,secretsmanager,apigateway
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      # Persiste os dados locais para não perder as filas e buckets ao desligar
+      - "./infra/localstack-data:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - dev_network
+
+networks:
+  dev_network:
+    driver: bridge
