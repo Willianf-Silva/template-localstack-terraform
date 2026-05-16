@@ -1,11 +1,9 @@
 provider "aws" {
-  region = "us-east-1"
+  region = var.region
 
-  # Credenciais fictícias aceitas pelo LocalStack
   access_key = "test"
   secret_key = "test"
 
-  # Configurações críticas para evitar erros de conexão com a AWS real
   skip_credentials_validation = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
@@ -21,6 +19,12 @@ provider "aws" {
     secretsmanager = "http://localhost:4566"
     iam            = "http://localhost:4566"
     cloudwatch     = "http://localhost:4566"
+    cloudwatchlogs = "http://localhost:4566"
+    events         = "http://localhost:4566"
+    kms            = "http://localhost:4566"
+    ssm            = "http://localhost:4566"
+    kinesis        = "http://localhost:4566"
+    sfn            = "http://localhost:4566"
     apigateway     = "http://localhost:4566"
   }
 }
