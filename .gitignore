@@ -30,3 +30,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Environment ###
+.env
+
+### Terraform Lambda artifact ###
+infra/modules/lambda/src/handler.zip
