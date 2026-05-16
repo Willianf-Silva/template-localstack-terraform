@@ -3,7 +3,7 @@ name: Integration — Apply, Verify & Destroy
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [develop]
     paths:
       - "infra/**"
 
@@ -41,12 +41,6 @@ jobs:
         with:
           terraform_version: "~1.9"
 
-      - name: Install AWS CLI
-        run: |
-          curl -sSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscliv2.zip
-          unzip -q awscliv2.zip
-          sudo ./aws/install --update
-
       - name: Cache providers
         uses: actions/cache@v4
         with:
@@ -75,32 +69,36 @@ jobs:
 
       - name: Verificar S3
         run: |
-          echo "==> Verificando bucket S3..."
+          echo "==> S3..."
           aws s3 ls --endpoint-url http://localhost:4566 | grep myapp-storage
           echo "OK"
 
       - name: Verificar SQS
         run: |
-          echo "==> Verificando filas SQS..."
-          aws sqs list-queues --endpoint-url http://localhost:4566 --query 'QueueUrls' --output text | tr '\t' '\n' | grep myapp-queue
+          echo "==> SQS..."
+          aws sqs list-queues --endpoint-url http://localhost:4566 \
+            --query 'QueueUrls' --output text | tr '\t' '\n' | grep myapp-queue
           echo "OK"
 
       - name: Verificar SNS
         run: |
-          echo "==> Verificando tópico SNS..."
-          aws sns list-topics --endpoint-url http://localhost:4566 --query 'Topics[*].TopicArn' --output text | tr '\t' '\n' | grep myapp-events
+          echo "==> SNS..."
+          aws sns list-topics --endpoint-url http://localhost:4566 \
+            --query 'Topics[*].TopicArn' --output text | tr '\t' '\n' | grep myapp-events
           echo "OK"
 
       - name: Verificar DynamoDB
         run: |
-          echo "==> Verificando tabela DynamoDB..."
-          aws dynamodb list-tables --endpoint-url http://localhost:4566 --query 'TableNames' --output text | grep myapp-table
+          echo "==> DynamoDB..."
+          aws dynamodb list-tables --endpoint-url http://localhost:4566 \
+            --query 'TableNames' --output text | grep myapp-table
           echo "OK"
 
       - name: Verificar Lambda
         run: |
-          echo "==> Verificando função Lambda..."
-          aws lambda list-functions --endpoint-url http://localhost:4566 --query 'Functions[*].FunctionName' --output text | grep myapp-fn
+          echo "==> Lambda..."
+          aws lambda list-functions --endpoint-url http://localhost:4566 \
+            --query 'Functions[*].FunctionName' --output text | grep myapp-fn
           echo "OK"
 
       - name: Invocar Lambda
@@ -117,32 +115,37 @@ jobs:
 
       - name: Verificar KMS
         run: |
-          echo "==> Verificando alias KMS..."
-          aws kms list-aliases --endpoint-url http://localhost:4566 --query 'Aliases[*].AliasName' --output text | tr '\t' '\n' | grep myapp-key
+          echo "==> KMS..."
+          aws kms list-aliases --endpoint-url http://localhost:4566 \
+            --query 'Aliases[*].AliasName' --output text | tr '\t' '\n' | grep myapp-key
           echo "OK"
 
       - name: Verificar SSM
         run: |
-          echo "==> Verificando parâmetros SSM..."
-          aws ssm get-parameter --endpoint-url http://localhost:4566 --name /myapp/config/log_level --query 'Parameter.Value' --output text
+          echo "==> SSM..."
+          aws ssm get-parameter --endpoint-url http://localhost:4566 \
+            --name /myapp/config/log_level --query 'Parameter.Value' --output text
           echo "OK"
 
       - name: Verificar Kinesis
         run: |
-          echo "==> Verificando stream Kinesis..."
-          aws kinesis list-streams --endpoint-url http://localhost:4566 --query 'StreamNames' --output text | grep myapp-stream
+          echo "==> Kinesis..."
+          aws kinesis list-streams --endpoint-url http://localhost:4566 \
+            --query 'StreamNames' --output text | grep myapp-stream
           echo "OK"
 
       - name: Verificar Step Functions
         run: |
-          echo "==> Verificando state machine..."
-          aws stepfunctions list-state-machines --endpoint-url http://localhost:4566 --query 'stateMachines[*].name' --output text | grep myapp-state-machine
+          echo "==> Step Functions..."
+          aws stepfunctions list-state-machines --endpoint-url http://localhost:4566 \
+            --query 'stateMachines[*].name' --output text | grep myapp-state-machine
           echo "OK"
 
       - name: Verificar API Gateway
         run: |
-          echo "==> Verificando API Gateway..."
-          aws apigateway get-rest-apis --endpoint-url http://localhost:4566 --query 'items[*].name' --output text | grep myapp-api
+          echo "==> API Gateway..."
+          aws apigateway get-rest-apis --endpoint-url http://localhost:4566 \
+            --query 'items[*].name' --output text | grep myapp-api
           echo "OK"
 
       - name: Exibir outputs

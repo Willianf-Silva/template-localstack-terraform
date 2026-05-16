@@ -2,7 +2,7 @@ name: CI — Terraform Validate & Plan
 
 on:
   pull_request:
-    branches: [main]
+    branches: [develop, main]
     paths:
       - "infra/**"
       - ".github/workflows/**"
