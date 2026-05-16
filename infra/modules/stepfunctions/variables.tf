@@ -1,8 +1,4 @@
 variable "app_name" {
-  type = string
-}
-
-variable "lambda_role_arn" {
   type        = string
-  description = "ARN da IAM role usada pela state machine"
+  description = "Nome da aplicação — usado como prefixo nos recursos"
 }
