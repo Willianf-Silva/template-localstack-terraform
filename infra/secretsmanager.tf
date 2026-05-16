@@ -4,9 +4,9 @@ resource "aws_secretsmanager_secret" "app_secrets" {
 }
 
 resource "aws_secretsmanager_secret_version" "example_val" {
-  secret_id     = aws_secretsmanager_secret.app_secrets.id
+  secret_id = aws_secretsmanager_secret.app_secrets.id
   secret_string = jsonencode({
-    api_key    = "local-key-123",
+    api_key     = "local-key-123",
     db_password = "local-password"
   })
 }

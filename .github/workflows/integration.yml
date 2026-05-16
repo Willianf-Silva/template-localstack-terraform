@@ -1,0 +1,160 @@
+name: Integration — Apply, Verify & Destroy
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [develop]
+    paths:
+      - "infra/**"
+
+jobs:
+  integration:
+    name: Apply, Verify & Destroy
+    runs-on: ubuntu-latest
+
+    services:
+      localstack:
+        # Community edition — não requer LOCALSTACK_AUTH_TOKEN nem licença Pro
+        image: localstack/localstack:3
+        ports:
+          - 4566:4566
+        env:
+          LAMBDA_EXECUTOR: local
+          AWS_DEFAULT_REGION: us-east-1
+          DEBUG: 0
+        options: >-
+          --health-cmd "curl -sf http://localhost:4566/_localstack/health | grep -q available"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 20
+          --health-start-period 30s
+
+    env:
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1.9"
+
+      - name: Cache providers
+        uses: actions/cache@v4
+        with:
+          path: infra/.terraform
+          key: terraform-${{ hashFiles('infra/.terraform.lock.hcl') }}
+
+      - name: Aguardar LocalStack
+        run: |
+          echo "Aguardando LocalStack e serviços ficarem disponíveis..."
+          for i in $(seq 1 40); do
+            STATUS=$(curl -sf http://localhost:4566/_localstack/health 2>/dev/null || echo "")
+            if echo "$STATUS" | grep -q "available"; then
+              echo "LocalStack pronto!"
+              curl -sf http://localhost:4566/_localstack/health | python3 -m json.tool
+              break
+            fi
+            echo "Tentativa $i/40..."
+            sleep 5
+          done
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: infra
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -no-color
+        working-directory: infra
+
+      - name: Verificar S3
+        run: |
+          echo "==> S3..."
+          aws s3 ls --endpoint-url http://localhost:4566 | grep myapp-storage
+          echo "OK"
+
+      - name: Verificar SQS
+        run: |
+          echo "==> SQS..."
+          aws sqs list-queues --endpoint-url http://localhost:4566 \
+            --query 'QueueUrls' --output text | tr '\t' '\n' | grep myapp-queue
+          echo "OK"
+
+      - name: Verificar SNS
+        run: |
+          echo "==> SNS..."
+          aws sns list-topics --endpoint-url http://localhost:4566 \
+            --query 'Topics[*].TopicArn' --output text | tr '\t' '\n' | grep myapp-events
+          echo "OK"
+
+      - name: Verificar DynamoDB
+        run: |
+          echo "==> DynamoDB..."
+          aws dynamodb list-tables --endpoint-url http://localhost:4566 \
+            --query 'TableNames' --output text | grep myapp-table
+          echo "OK"
+
+      - name: Verificar Lambda
+        run: |
+          echo "==> Lambda..."
+          aws lambda list-functions --endpoint-url http://localhost:4566 \
+            --query 'Functions[*].FunctionName' --output text | grep myapp-fn
+          echo "OK"
+
+      - name: Invocar Lambda
+        run: |
+          echo "==> Invocando Lambda..."
+          aws lambda invoke \
+            --endpoint-url http://localhost:4566 \
+            --function-name myapp-fn \
+            --payload '{}' \
+            /tmp/lambda-out.json
+          cat /tmp/lambda-out.json
+          grep -q "Hello from LocalStack Lambda" /tmp/lambda-out.json
+          echo "OK"
+
+      - name: Verificar KMS
+        run: |
+          echo "==> KMS..."
+          aws kms list-aliases --endpoint-url http://localhost:4566 \
+            --query 'Aliases[*].AliasName' --output text | tr '\t' '\n' | grep myapp-key
+          echo "OK"
+
+      - name: Verificar SSM
+        run: |
+          echo "==> SSM..."
+          aws ssm get-parameter --endpoint-url http://localhost:4566 \
+            --name /myapp/config/log_level --query 'Parameter.Value' --output text
+          echo "OK"
+
+      - name: Verificar Kinesis
+        run: |
+          echo "==> Kinesis..."
+          aws kinesis list-streams --endpoint-url http://localhost:4566 \
+            --query 'StreamNames' --output text | grep myapp-stream
+          echo "OK"
+
+      - name: Verificar Step Functions
+        run: |
+          echo "==> Step Functions..."
+          aws stepfunctions list-state-machines --endpoint-url http://localhost:4566 \
+            --query 'stateMachines[*].name' --output text | grep myapp-state-machine
+          echo "OK"
+
+      - name: Verificar API Gateway
+        run: |
+          echo "==> API Gateway..."
+          aws apigateway get-rest-apis --endpoint-url http://localhost:4566 \
+            --query 'items[*].name' --output text | grep myapp-api
+          echo "OK"
+
+      - name: Exibir outputs
+        run: terraform output -no-color
+        working-directory: infra
+
+      - name: Terraform Destroy
+        if: always()
+        run: terraform destroy -auto-approve -no-color
+        working-directory: infra
