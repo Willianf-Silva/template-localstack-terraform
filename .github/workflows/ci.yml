@@ -50,6 +50,29 @@ jobs:
     name: Terraform Plan
     runs-on: ubuntu-latest
     needs: [validate]
+
+    services:
+      localstack:
+        image: localstack/localstack:latest
+        ports:
+          - 4566:4566
+        env:
+          SERVICES: s3,sqs,sns,dynamodb,lambda,secretsmanager,iam,cloudwatch,logs,events,kms,ssm,kinesis,stepfunctions,apigateway
+          LAMBDA_EXECUTOR: local
+          AWS_DEFAULT_REGION: us-east-1
+          DEBUG: 0
+        options: >-
+          --health-cmd "curl -sf http://localhost:4566/_localstack/health | grep -q available"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 20
+          --health-start-period 30s
+
+    env:
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
+
     steps:
       - uses: actions/checkout@v4
 
@@ -63,18 +86,23 @@ jobs:
           path: infra/.terraform
           key: terraform-${{ hashFiles('infra/.terraform.lock.hcl') }}
 
-      - name: Init
-        run: terraform init -backend=false
-        working-directory: infra
-        env:
-          AWS_ACCESS_KEY_ID: test
-          AWS_SECRET_ACCESS_KEY: test
-          AWS_DEFAULT_REGION: us-east-1
+      - name: Aguardar LocalStack
+        run: |
+          echo "Aguardando LocalStack..."
+          for i in $(seq 1 30); do
+            STATUS=$(curl -sf http://localhost:4566/_localstack/health 2>/dev/null || echo "")
+            if echo "$STATUS" | grep -q "available"; then
+              echo "LocalStack pronto!"
+              break
+            fi
+            echo "Tentativa $i/30..."
+            sleep 3
+          done
 
-      - name: Plan
+      - name: Terraform Init
+        run: terraform init
+        working-directory: infra
+
+      - name: Terraform Plan
         run: terraform plan -no-color
         working-directory: infra
-        env:
-          AWS_ACCESS_KEY_ID: test
-          AWS_SECRET_ACCESS_KEY: test
-          AWS_DEFAULT_REGION: us-east-1

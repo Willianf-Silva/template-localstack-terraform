@@ -23,10 +23,10 @@ jobs:
           AWS_DEFAULT_REGION: us-east-1
           DEBUG: 0
         options: >-
-          --health-cmd "curl -f http://localhost:4566/_localstack/health"
+          --health-cmd "curl -sf http://localhost:4566/_localstack/health | grep -q available"
           --health-interval 10s
           --health-timeout 5s
-          --health-retries 15
+          --health-retries 20
           --health-start-period 30s
 
     env:
@@ -49,14 +49,16 @@ jobs:
 
       - name: Aguardar LocalStack
         run: |
-          echo "Aguardando LocalStack ficar disponível..."
-          for i in $(seq 1 30); do
-            if curl -sf http://localhost:4566/_localstack/health > /dev/null; then
+          echo "Aguardando LocalStack e serviços ficarem disponíveis..."
+          for i in $(seq 1 40); do
+            STATUS=$(curl -sf http://localhost:4566/_localstack/health 2>/dev/null || echo "")
+            if echo "$STATUS" | grep -q "available"; then
               echo "LocalStack pronto!"
+              curl -sf http://localhost:4566/_localstack/health | python3 -m json.tool
               break
             fi
-            echo "Tentativa $i/30..."
-            sleep 3
+            echo "Tentativa $i/40..."
+            sleep 5
           done
 
       - name: Terraform Init
