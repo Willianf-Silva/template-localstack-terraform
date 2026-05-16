@@ -53,11 +53,11 @@ jobs:
 
     services:
       localstack:
-        # Community edition — não requer LOCALSTACK_AUTH_TOKEN nem licença Pro
-        image: localstack/localstack:3
+        image: localstack/localstack:latest
         ports:
           - 4566:4566
         env:
+          LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
           LAMBDA_EXECUTOR: local
           AWS_DEFAULT_REGION: us-east-1
           DEBUG: 0
