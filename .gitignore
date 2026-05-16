@@ -33,3 +33,6 @@ build/
 
 ### Environment ###
 .env
+
+### Terraform Lambda artifact ###
+infra/modules/lambda/src/handler.zip
