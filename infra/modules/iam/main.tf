@@ -11,6 +11,7 @@ data "aws_iam_policy_document" "lambda_assume_role" {
 resource "aws_iam_role" "lambda" {
   name               = "${var.app_name}-lambda-role"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
+  tags               = var.tags
 }
 
 resource "aws_iam_role_policy" "lambda" {
@@ -35,7 +36,7 @@ resource "aws_iam_role_policy" "lambda" {
           "s3:GetObject",
           "s3:ListBucket"
         ]
-        Resource = "*"
+        Resource = var.s3_bucket_arns
       },
       {
         Effect = "Allow"
@@ -44,7 +45,7 @@ resource "aws_iam_role_policy" "lambda" {
           "sqs:DeleteMessage",
           "sqs:GetQueueAttributes"
         ]
-        Resource = "*"
+        Resource = var.sqs_queue_arns
       }
     ]
   })
