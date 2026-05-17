@@ -154,7 +154,16 @@ jobs:
         run: terraform output -no-color
         working-directory: infra
 
+      - name: Remover Lambda antes do destroy
+        if: always()
+        run: |
+          # LocalStack trava no destroy de Lambda com LAMBDA_EXECUTOR=local.
+          # Deletar via CLI antes libera o bloqueio para o terraform destroy.
+          aws --endpoint-url http://localhost:4566 \
+            lambda delete-function --function-name myapp-fn 2>/dev/null || true
+
       - name: Terraform Destroy
         if: always()
+        timeout-minutes: 5
         run: terraform destroy -auto-approve -no-color
         working-directory: infra
