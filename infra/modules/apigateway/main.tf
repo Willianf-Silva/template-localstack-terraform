@@ -1,5 +1,6 @@
 resource "aws_api_gateway_rest_api" "main" {
   name = "${var.app_name}-api"
+  tags = var.tags
 }
 
 resource "aws_api_gateway_resource" "health" {
@@ -30,10 +31,11 @@ resource "aws_api_gateway_deployment" "main" {
   depends_on = [aws_api_gateway_integration.health_lambda]
 }
 
-resource "aws_api_gateway_stage" "local" {
+resource "aws_api_gateway_stage" "main" {
   rest_api_id   = aws_api_gateway_rest_api.main.id
   deployment_id = aws_api_gateway_deployment.main.id
-  stage_name    = "local"
+  stage_name    = var.stage_name
+  tags          = var.tags
 }
 
 resource "aws_lambda_permission" "apigateway" {
