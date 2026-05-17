@@ -11,11 +11,14 @@ resource "aws_lambda_function" "main" {
   handler          = "handler.handler"
   runtime          = "python3.12"
   role             = var.role_arn
-  timeout          = 30
+  memory_size      = var.memory_size
+  timeout          = var.timeout
+  tags             = var.tags
 
   environment {
-    variables = {
-      APP_NAME = var.app_name
-    }
+    variables = merge(
+      { APP_NAME = var.app_name },
+      var.environment_variables
+    )
   }
 }

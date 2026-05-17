@@ -1,7 +1,8 @@
 resource "aws_cloudwatch_event_rule" "schedule" {
   name                = "${var.app_name}-schedule"
-  description         = "Aciona ${var.app_name} Lambda a cada 5 minutos"
-  schedule_expression = "rate(5 minutes)"
+  description         = "Aciona ${var.app_name} Lambda — ${var.schedule_expression}"
+  schedule_expression = var.schedule_expression
+  tags                = var.tags
 }
 
 resource "aws_cloudwatch_event_target" "lambda" {
