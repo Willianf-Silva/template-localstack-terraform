@@ -59,6 +59,7 @@ jobs:
         env:
           LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
           LAMBDA_EXECUTOR: local
+          PROVIDER_OVERRIDE_LAMBDA: legacy
           AWS_DEFAULT_REGION: us-east-1
           DEBUG: 0
         options: >-
