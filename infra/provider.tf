@@ -11,20 +11,20 @@ provider "aws" {
   s3_use_path_style = true
 
   endpoints {
-    s3             = "http://localhost:4566"
-    sqs            = "http://localhost:4566"
-    sns            = "http://localhost:4566"
-    dynamodb       = "http://localhost:4566"
-    lambda         = "http://localhost:4566"
-    secretsmanager = "http://localhost:4566"
-    iam            = "http://localhost:4566"
-    cloudwatch     = "http://localhost:4566"
-    cloudwatchlogs = "http://localhost:4566"
-    events         = "http://localhost:4566"
-    kms            = "http://localhost:4566"
-    ssm            = "http://localhost:4566"
-    kinesis        = "http://localhost:4566"
-    sfn            = "http://localhost:4566"
-    apigateway     = "http://localhost:4566"
+    s3             = var.localstack_endpoint
+    sqs            = var.localstack_endpoint
+    sns            = var.localstack_endpoint
+    dynamodb       = var.localstack_endpoint
+    lambda         = var.localstack_endpoint
+    secretsmanager = var.localstack_endpoint
+    iam            = var.localstack_endpoint
+    cloudwatch     = var.localstack_endpoint
+    cloudwatchlogs = var.localstack_endpoint
+    events         = var.localstack_endpoint
+    kms            = var.localstack_endpoint
+    ssm            = var.localstack_endpoint
+    kinesis        = var.localstack_endpoint
+    sfn            = var.localstack_endpoint
+    apigateway     = var.localstack_endpoint
   }
 }
