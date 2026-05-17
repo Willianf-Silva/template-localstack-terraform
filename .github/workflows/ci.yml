@@ -1,0 +1,108 @@
+name: CI — Terraform Validate & Plan
+
+on:
+  pull_request:
+    branches: [develop, main]
+    paths:
+      - "infra/**"
+      - ".github/workflows/**"
+
+jobs:
+  fmt:
+    name: Terraform Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1.9"
+
+      - name: Check formatting
+        run: terraform fmt -check -recursive
+        working-directory: infra
+
+  validate:
+    name: Terraform Validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1.9"
+
+      - name: Cache providers
+        uses: actions/cache@v4
+        with:
+          path: infra/.terraform
+          key: terraform-${{ hashFiles('infra/.terraform.lock.hcl') }}
+
+      - name: Init (sem backend)
+        run: terraform init -backend=false
+        working-directory: infra
+
+      - name: Validate
+        run: terraform validate
+        working-directory: infra
+
+  plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    needs: [validate]
+
+    services:
+      localstack:
+        image: localstack/localstack:latest
+        ports:
+          - 4566:4566
+        env:
+          LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
+          AWS_DEFAULT_REGION: us-east-1
+          DEBUG: 0
+        options: >-
+          --health-cmd "curl -sf http://localhost:4566/_localstack/health | grep -q available"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 20
+          --health-start-period 30s
+          -v /var/run/docker.sock:/var/run/docker.sock
+
+    env:
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1.9"
+
+      - name: Cache providers
+        uses: actions/cache@v4
+        with:
+          path: infra/.terraform
+          key: terraform-${{ hashFiles('infra/.terraform.lock.hcl') }}
+
+      - name: Aguardar LocalStack
+        run: |
+          echo "Aguardando LocalStack..."
+          for i in $(seq 1 30); do
+            STATUS=$(curl -sf http://localhost:4566/_localstack/health 2>/dev/null || echo "")
+            if echo "$STATUS" | grep -q "available"; then
+              echo "LocalStack pronto!"
+              break
+            fi
+            echo "Tentativa $i/30..."
+            sleep 3
+          done
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: infra
+
+      - name: Terraform Plan
+        run: terraform plan -no-color
+        working-directory: infra

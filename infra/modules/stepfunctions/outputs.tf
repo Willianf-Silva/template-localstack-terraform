@@ -1,7 +1,7 @@
 output "state_machine_arn" {
-  value = aws_sfn_state_machine.main.arn
+  value = local.state_machine_arn
 }
 
 output "state_machine_name" {
-  value = aws_sfn_state_machine.main.name
+  value = local.state_machine_name
 }
