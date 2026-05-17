@@ -20,8 +20,6 @@ jobs:
           - 4566:4566
         env:
           LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
-          LAMBDA_EXECUTOR: local
-          PROVIDER_OVERRIDE_LAMBDA: legacy
           AWS_DEFAULT_REGION: us-east-1
           DEBUG: 0
         options: >-
@@ -30,6 +28,7 @@ jobs:
           --health-timeout 5s
           --health-retries 20
           --health-start-period 30s
+          -v /var/run/docker.sock:/var/run/docker.sock
 
     env:
       AWS_ACCESS_KEY_ID: test

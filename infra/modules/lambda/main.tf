@@ -11,6 +11,7 @@ resource "aws_lambda_function" "main" {
   handler          = "handler.handler"
   runtime          = "python3.12"
   role             = var.role_arn
+  timeout          = 30
 
   environment {
     variables = {
