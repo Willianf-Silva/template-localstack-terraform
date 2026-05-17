@@ -56,7 +56,7 @@ resource "terraform_data" "sfn_state_machine" {
     }
     command = <<-EOT
       aws --endpoint-url "$ENDPOINT" --region us-east-1 \
-        sfn create-state-machine \
+        stepfunctions create-state-machine \
         --name "$NAME" \
         --role-arn "$ROLE_ARN" \
         --type EXPRESS \
@@ -72,7 +72,7 @@ resource "terraform_data" "sfn_state_machine" {
     }
     command = <<-EOT
       aws --endpoint-url "$ENDPOINT" --region us-east-1 \
-        sfn delete-state-machine \
+        stepfunctions delete-state-machine \
         --state-machine-arn "$ARN" 2>/dev/null || true
     EOT
   }
