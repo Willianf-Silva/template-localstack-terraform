@@ -1,16 +1,8 @@
 variable "app_name" {
-  description = "Prefixo da aplicação — usado no nome do bucket"
+  type = string
+}
+
+variable "bucket_name" {
   type        = string
-}
-
-variable "enable_versioning" {
-  description = "Habilita versionamento de objetos no bucket"
-  type        = bool
-  default     = false
-}
-
-variable "tags" {
-  description = "Tags aplicadas ao bucket"
-  type        = map(string)
-  default     = {}
+  description = "The name of the S3 bucket to create."
 }

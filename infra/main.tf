@@ -1,26 +1,14 @@
-locals {
-  common_tags = merge(
-    {
-      app_name    = var.app_name
-      environment = var.environment
-      managed_by  = "terraform"
-    },
-    var.tags
-  )
-}
-
 module "s3" {
-  count    = var.enable_s3 ? 1 : 0
-  source   = "./modules/s3"
-  app_name = var.app_name
-  tags     = local.common_tags
+  count       = var.enable_s3 ? 1 : 0
+  source      = "./modules/s3"
+  app_name    = var.app_name
+  bucket_name = "${var.app_name}-storage"
 }
 
 module "sqs" {
   count    = var.enable_sqs ? 1 : 0
   source   = "./modules/sqs"
   app_name = var.app_name
-  tags     = local.common_tags
 }
 
 module "sns" {
@@ -28,14 +16,12 @@ module "sns" {
   source        = "./modules/sns"
   app_name      = var.app_name
   sqs_queue_arn = module.sqs[0].queue_arn
-  tags          = local.common_tags
 }
 
 module "dynamodb" {
   count    = var.enable_dynamodb ? 1 : 0
   source   = "./modules/dynamodb"
   app_name = var.app_name
-  tags     = local.common_tags
 }
 
 module "secretsmanager" {
@@ -43,21 +29,18 @@ module "secretsmanager" {
   source      = "./modules/secretsmanager"
   app_name    = var.app_name
   environment = var.environment
-  tags        = local.common_tags
 }
 
 module "kms" {
   count    = var.enable_kms ? 1 : 0
   source   = "./modules/kms"
   app_name = var.app_name
-  tags     = local.common_tags
 }
 
 module "iam" {
   count    = var.enable_iam ? 1 : 0
   source   = "./modules/iam"
   app_name = var.app_name
-  tags     = local.common_tags
 }
 
 module "lambda" {
@@ -65,7 +48,6 @@ module "lambda" {
   source   = "./modules/lambda"
   app_name = var.app_name
   role_arn = module.iam[0].lambda_role_arn
-  tags     = local.common_tags
 }
 
 module "cloudwatch" {
@@ -73,7 +55,6 @@ module "cloudwatch" {
   source               = "./modules/cloudwatch"
   app_name             = var.app_name
   lambda_function_name = module.lambda[0].function_name
-  tags                 = local.common_tags
 }
 
 module "eventbridge" {
@@ -82,7 +63,6 @@ module "eventbridge" {
   app_name             = var.app_name
   lambda_arn           = module.lambda[0].function_arn
   lambda_function_name = module.lambda[0].function_name
-  tags                 = local.common_tags
 }
 
 module "ssm" {
@@ -90,14 +70,12 @@ module "ssm" {
   source      = "./modules/ssm"
   app_name    = var.app_name
   environment = var.environment
-  tags        = local.common_tags
 }
 
 module "kinesis" {
   count    = var.enable_kinesis ? 1 : 0
   source   = "./modules/kinesis"
   app_name = var.app_name
-  tags     = local.common_tags
 }
 
 module "stepfunctions" {
@@ -113,5 +91,4 @@ module "apigateway" {
   lambda_invoke_arn    = module.lambda[0].invoke_arn
   lambda_function_name = module.lambda[0].function_name
   localstack_endpoint  = var.localstack_endpoint
-  tags                 = local.common_tags
 }

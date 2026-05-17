@@ -22,11 +22,7 @@ variable "localstack_endpoint" {
   default     = "http://localhost:4566"
 }
 
-variable "tags" {
-  description = "Tags extras aplicadas em todos os recursos que suportam tags"
-  type        = map(string)
-  default     = {}
-}
+
 
 # --- Feature flags — comente o módulo em main.tf para desativar ---
 
