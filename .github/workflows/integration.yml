@@ -11,6 +11,7 @@ jobs:
   integration:
     name: Apply, Verify & Destroy
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     services:
       localstack:
@@ -48,6 +49,7 @@ jobs:
           key: terraform-${{ hashFiles('infra/.terraform.lock.hcl') }}
 
       - name: Aguardar LocalStack
+        timeout-minutes: 3
         run: |
           echo "Aguardando LocalStack e serviços ficarem disponíveis..."
           for i in $(seq 1 40); do
@@ -62,20 +64,24 @@ jobs:
           done
 
       - name: Terraform Init
+        timeout-minutes: 3
         run: terraform init
         working-directory: infra
 
       - name: Terraform Apply
+        timeout-minutes: 10
         run: terraform apply -auto-approve -no-color
         working-directory: infra
 
       - name: Verificar S3
+        timeout-minutes: 1
         run: |
           echo "==> S3..."
           aws s3 ls --endpoint-url http://localhost:4566 | grep myapp-storage
           echo "OK"
 
       - name: Verificar SQS
+        timeout-minutes: 1
         run: |
           echo "==> SQS..."
           aws sqs list-queues --endpoint-url http://localhost:4566 \
@@ -83,6 +89,7 @@ jobs:
           echo "OK"
 
       - name: Verificar SNS
+        timeout-minutes: 1
         run: |
           echo "==> SNS..."
           aws sns list-topics --endpoint-url http://localhost:4566 \
@@ -90,6 +97,7 @@ jobs:
           echo "OK"
 
       - name: Verificar DynamoDB
+        timeout-minutes: 1
         run: |
           echo "==> DynamoDB..."
           aws dynamodb list-tables --endpoint-url http://localhost:4566 \
@@ -97,6 +105,7 @@ jobs:
           echo "OK"
 
       - name: Verificar Lambda
+        timeout-minutes: 1
         run: |
           echo "==> Lambda..."
           aws lambda list-functions --endpoint-url http://localhost:4566 \
@@ -104,6 +113,7 @@ jobs:
           echo "OK"
 
       - name: Invocar Lambda
+        timeout-minutes: 2
         run: |
           echo "==> Invocando Lambda..."
           aws lambda invoke \
@@ -116,6 +126,7 @@ jobs:
           echo "OK"
 
       - name: Verificar KMS
+        timeout-minutes: 1
         run: |
           echo "==> KMS..."
           aws kms list-aliases --endpoint-url http://localhost:4566 \
@@ -123,6 +134,7 @@ jobs:
           echo "OK"
 
       - name: Verificar SSM
+        timeout-minutes: 1
         run: |
           echo "==> SSM..."
           aws ssm get-parameter --endpoint-url http://localhost:4566 \
@@ -130,6 +142,7 @@ jobs:
           echo "OK"
 
       - name: Verificar Kinesis
+        timeout-minutes: 1
         run: |
           echo "==> Kinesis..."
           aws kinesis list-streams --endpoint-url http://localhost:4566 \
@@ -137,6 +150,7 @@ jobs:
           echo "OK"
 
       - name: Verificar Step Functions
+        timeout-minutes: 1
         run: |
           echo "==> Step Functions..."
           aws stepfunctions list-state-machines --endpoint-url http://localhost:4566 \
@@ -144,6 +158,7 @@ jobs:
           echo "OK"
 
       - name: Verificar API Gateway
+        timeout-minutes: 1
         run: |
           echo "==> API Gateway..."
           aws apigateway get-rest-apis --endpoint-url http://localhost:4566 \
@@ -151,11 +166,13 @@ jobs:
           echo "OK"
 
       - name: Exibir outputs
+        timeout-minutes: 1
         run: terraform output -no-color
         working-directory: infra
 
       - name: Remover Lambda antes do destroy
         if: always()
+        timeout-minutes: 1
         run: |
           # LocalStack trava no destroy de Lambda com LAMBDA_EXECUTOR=local.
           # Deletar via CLI antes libera o bloqueio para o terraform destroy.
