@@ -1,8 +1,15 @@
 variable "app_name" {
-  type = string
+  description = "Prefixo da aplicação — usado no nome do tópico"
+  type        = string
 }
 
 variable "sqs_queue_arn" {
-  type        = string
   description = "ARN da fila SQS que receberá mensagens do tópico"
+  type        = string
+}
+
+variable "tags" {
+  description = "Tags aplicadas ao tópico SNS"
+  type        = map(string)
+  default     = {}
 }
